@@ -4,9 +4,6 @@ Official code for **"OmniTrace: A Unified Framework for Generation-Time Source A
 
 [📄 Paper](OmniTrace.pdf) | [📜 arXiv](https://arxiv.org/abs/2604.13073) | [🌐 Project page](https://jackie-2000.github.io/omnitrace.github.io/)
 
-> **This is version 2.** v2 replaces the argmax tracing and curation of the first preprint with a simpler rule, reading attention as *mass* over source units. It also adds a causal evaluation protocol for audio and video, and covers three models.
-> The v1 code is kept at the git tag [`v1.0`](https://github.com/UCSB-AI/OmniTrace/tree/v1.0) and on PyPI (`pip install omnitrace==0.1.1`).
-
 <p align="center"><img src="assets/teaser.png" width="92%"></p>
 
 An omni-modal LLM can answer questions about a video, a recording, or a long document. It cannot show which part of the input an answer came from.
