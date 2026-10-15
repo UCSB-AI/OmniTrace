@@ -1,8 +1,11 @@
 __pycache__/
 *.pyc
-*.pyo
 *.egg-info/
 dist/
 build/
 .vscode
 .env
+.DS_Store
+# outputs and media
+runs/
+data/*/

@@ -1,0 +1,9 @@
+# OmniTrace, Qwen2.5-Omni backend. Python >= 3.10, CUDA GPU.
+torch>=2.4                  # Blackwell GPUs (sm_120, e.g. RTX Pro 6000): torch>=2.7 built for CUDA>=12.8 (--index-url https://download.pytorch.org/whl/cu128)
+transformers>=4.56          # needs decoder attention dispatched via ALL_ATTENTION_FUNCTIONS (SDPA capture)
+accelerate
+qwen-omni-utils[decord]     # video/audio loading; decord video reader
+numpy
+tqdm
+spacy>=3.7                  # + python -m spacy download en_core_web_sm
+librosa

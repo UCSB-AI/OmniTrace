@@ -1,403 +1,243 @@
 # OmniTrace
-This is the official repository for the paper:
-**"OmniTrace: A Unified Framework for Generation-Time Attribution in Omni-Modal LLMs"**
 
-[📄 arxiv](https://arxiv.org/abs/2604.13073v1) | [🌐 Project Page](https://jackie-2000.github.io/omnitrace.github.io/) | [📦 PyPI](https://pypi.org/project/omnitrace) 
+Official code for **"OmniTrace: A Unified Framework for Generation-Time Source Attribution in Omni-Modal LLMs"**.
 
-## 🧠 Overview
+[📄 Paper](OmniTrace.pdf) | [📜 arXiv](https://arxiv.org/abs/2604.13073) | [🌐 Project page](https://jackie-2000.github.io/omnitrace.github.io/)
 
-<p align="center">
-  <img src="overview.png" width="80%" />
-</p>
+> **This is version 2.** v2 replaces the argmax tracing and curation of the first preprint with a simpler rule, reading attention as *mass* over source units. It also adds a causal evaluation protocol for audio and video, and covers three models.
+> The v1 code is kept at the git tag [`v1.0`](https://github.com/UCSB-AI/OmniTrace/tree/v1.0) and on PyPI (`pip install omnitrace==0.1.1`).
 
-OmniTrace is a **plug-and-play framework for generation-time attribution** in multimodal large language models (text, image, audio, video).
-- Works for **decoder-only multimodal LLMs**
-- Supports **text, image, audio, and video**
-- Provides **generation-time attribution**
-- Plug-and-play across different backends (Qwen, MiniCPM)
-- No retraining required
+<p align="center"><img src="assets/teaser.png" width="92%"></p>
 
----
+An omni-modal LLM can answer questions about a video, a recording, or a long document. It cannot show which part of the input an answer came from.
+- **Asking** the model to cite its evidence tells you what it *says* it used.
+- **Measuring** what it *used* has so far meant rerunning it dozens of times with parts of the input removed. Every rerun covers the full clip.
 
-## 🚀 Installation
+**OmniTrace reads the evidence from the generation pass itself.** For each generated sentence, it sums the late-layer attention that the sentence puts on each **source unit**: one second of video, one second of audio, a text passage, or an image. Units that stand out within their own modality are returned as evidence: time intervals for audio and video, quote ids for documents.
 
-### 🔧 Step 1: Install Backend Environments (Required)
+- **One pass.** No extra forward pass, no backward pass, no training. Every sentence gets its sources while the answer is generated.
+- **Any modality.** Video, audio, images, and text are handled by one rule with one setting, on three models: Qwen2.5-Omni-7B, MiniCPM-o 4.5, and Qwen3-Omni-30B-A3B.
+- **Tested, not assumed.** We hide units at the encoder input behind content-free placeholders (black frames, silence, blank tokens) and replay the model's own response. The units OmniTrace picks matter more than random units in all 9 model × modality settings. OmniTrace recovers 77–96% of the effect of leave-one-out, which needs 16–41 extra passes.
 
-OmniTrace relies on multimodal backends. Please follow the official setup instructions:
+## How it works
 
-- Qwen2.5-Omni: https://github.com/QwenLM/Qwen2.5-Omni  
-- MiniCPM-o: https://github.com/OpenBMB/MiniCPM-o  
+1. **Source units.** The input is cut along structure it already has: ~1-s units for video and audio, following the encoder's own time grid, and one unit per text passage or image. The question, the options, and the template are never candidates.
+2. **Attention mass.** At every generated token, attention is averaged over all heads of the last third of the decoder layers. A unit's score for a sentence is the attention mass the sentence's tokens put on it:
+   $s_k(S_j)=\sum_{t\in C_k}\sum_{i\in S_j} a_t(i)$.
+   The score adds up over tokens, so the response score is the sum of the sentence scores. Hard tracing that follows argmax *peaks* breaks on continuous inputs: one second of video spans hundreds of positions, each with little weight. The second as a whole can still hold the mass.
+3. **Labels.** A unit is labelled when its score is at least τ = 1.5 times the mean of the other units of the same modality. Flat scores give no label, so the sentence abstains.
 
-We recommend creating a dedicated conda environment for each backend. Then install dependencies following the official repositories above.
+**OmniTrace-trained** (optional) learns one weight per attention head from ablation data, still in one pass at test time. The released code covers the training-free default.
 
----
+## Results
 
-### 📦 Step 2: Install OmniTrace
+Lift is the extra drop in the log-probability of the model's own response when a method's top units are hidden, compared with hiding the same number of random units (nats/token; 20% of the duration for video and audio, 2 of 15 quotes for documents). S-lift and S-spec are the same test for single sentences: S-lift compares with random units, S-spec with the other sentences. Fwd counts the extra forward passes per question. Baselines run on Qwen2.5-Omni-7B.
 
-#### Option 1: Install from PyPI (recommended)
+| Method | Video Fwd | Video Lift | Video S-lift | Audio Fwd | Audio Lift | Audio S-lift | Doc Fwd | Doc Lift | Doc S-lift |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Embedding similarity | 0 | 0.008 | 0.009 | 0 | 0.034 | 0.031 | 0 | 0.216 | 0.216 |
+| Self-citation | 1 | 0.013 | 0.012 | 1 | 0.040 | 0.036 | 1 | 0.184 | 0.349 |
+| Leave-one-out* | 41 | 0.016 | 0.024 | 17 | 0.100 | 0.133 | 16 | 0.368 | 0.404 |
+| ContextCite* | 33 | 0.016 | 0.027 | 28 | 0.099 | 0.139 | 33 | 0.389 | 0.397 |
+| **OmniTrace** · Qwen2.5-Omni-7B | **0** | 0.016 | 0.015 | **0** | 0.077 | 0.110 | **0** | 0.351 | 0.376 |
+| **OmniTrace-trained** · Qwen2.5-Omni-7B | **0** | 0.014 | 0.016 | **0** | 0.081 | 0.116 | **0** | 0.374 | 0.385 |
+| **OmniTrace** · MiniCPM-o 4.5 | **0** | 0.024 | 0.027 | **0** | 0.136 | 0.102 | **0** | 0.105 | 0.159 |
+| **OmniTrace-trained** · MiniCPM-o 4.5 | **0** | 0.067 | 0.065 | **0** | 0.169 | 0.120 | **0** | 0.432 | 0.706 |
+| **OmniTrace** · Qwen3-Omni-30B-A3B | **0** | 0.033 | 0.032 | **0** | 0.112 | 0.095 | **0** | 0.316 | 0.448 |
 
-```bash
-pip install omnitrace
-```
+\*Defined for text in the original work. Here they run on audio, video, and images with OmniTrace's units and placeholders.
 
-#### Option 2: Install from GitHub
+<p align="center"><img src="assets/fig_curves.png" width="95%"></p>
+<p align="center"><em>Hiding the units OmniTrace selects (orange) hurts the response more than hiding random units (blue), at every budget, in every modality, on every model. Bands are 95% bootstrap intervals.</em></p>
 
-```bash
-git clone https://github.com/Jackie-2000/OmniTrace.git
-cd OmniTrace
-pip install -e .
-```
+<p align="center"><img src="assets/fig_cost.png" width="48%">&nbsp;<img src="assets/fig_stated.png" width="48%"></p>
+<p align="center"><em>Left: faithfulness (share of leave-one-out's lift) against extra forward passes. Right: when asked to cite, the model often gives no citation for audio and video, and the units it cites matter less than OmniTrace's units of the same count.</em></p>
 
----
+OmniTrace also agrees best with human-marked evidence. Its response-level ranking reaches an AUROC of 0.83 on documents and 0.64 on video. The strongest baseline reaches 0.76 and 0.60.
 
-### 🔑 Step 3: Set Up ElevenLabs API Key (Optional)
+## Installation
 
-OmniTrace uses [ElevenLabs Scribe v2](https://elevenlabs.io/docs/overview/intro) as the default ASR backend for **semantic audio chunking** (`--use_asr_for_audio`). If you plan to use this feature, first install the ElevenLabs SDK and set up an API key.
-
-1. Install the ElevenLabs package:
-
-```bash
-pip install elevenlabs
-```
-
-2. Register at [https://elevenlabs.io](https://elevenlabs.io) and obtain an API key from your profile settings.
-3. Set the environment variable:
+Each model family pins a different `transformers` version, so use one environment per model:
 
 ```bash
-export ELEVENLABS_API_KEY="your_api_key_here"
+git clone https://github.com/UCSB-AI/OmniTrace.git && cd OmniTrace
+
+# Qwen2.5-Omni-7B (default)
+conda create -n omnitrace python=3.10 -y && conda activate omnitrace
+pip install -r requirements.txt && python -m spacy download en_core_web_sm
+
+# MiniCPM-o 4.5 (transformers 4.51)
+conda create -n omnitrace-minicpm python=3.10 -y && conda activate omnitrace-minicpm
+pip install -r requirements_minicpm.txt && python -m spacy download en_core_web_sm
+
+# Qwen3-Omni-30B-A3B (transformers 4.57.1)
+conda create -n omnitrace-qwen3 python=3.11 -y && conda activate omnitrace-qwen3
+pip install -r requirements_qwen3.txt && python -m spacy download en_core_web_sm
 ```
 
-Or pass it directly via the Python API:
+Optionally, run `pip install -e .` to import `omnitrace` from anywhere. A CUDA GPU is needed (Qwen2.5-Omni-7B: about 25–35 GB per process in bf16). Models are placed with `device_map="auto"`, so a large model can span several GPUs.
+
+## Quick start
+
+### Python API
 
 ```python
-from omnitrace.audio_processing import ChunkerConfig
+from omnitrace import OmniTrace
 
-config = ChunkerConfig(elevenlabs_api_key="your_api_key_here")
-tracer.trace_audio(
-    prompt="...", audio="sample.wav",
-    audio_chunk_mode="semantic", asr_model="scribe_v2",
-    chunker_config=config,
-)
+ot = OmniTrace("qwen2.5-omni-7b")          # or "minicpm-o-4.5", "qwen3-omni-30b-a3b"
+
+out = ot.trace({
+    "question": "Why did the boys walk backwards after talking to the lady?",
+    "options": ["walk to the tent", "show his garden", "to come in the camera",
+                "convince girl to do something", "give spotlight to boy in yellow"],
+    "sources": [{"sid": "v0", "modality": "video", "path": "examples/media/3487251005.mp4"}],
+})
+
+print(out["response"])
+for s in out["sentences"]:
+    print(s["text"], "<-", s["spans"] or s["sources"] or "(no source)")
+# 3. Following this interaction, the boy and the other individual begin to walk backwards. <- {'v0': [[16.25, 20.312]]}
+# (human-marked evidence for this question: 15.9-20.0 s; output of Qwen2.5-Omni-7B in our run)
 ```
 
-> **Note**: This step is only required when using semantic audio chunking (`--use_asr_for_audio`). Time-bin mode (the default) does not require an API key.
+Each sentence comes with:
+- `scores`: the attention mass on every unit, indexed by `out["units"][i]["uid"]`.
+- `units`: the labelled unit ids.
+- `spans`: merged time intervals per audio or video source.
+- `sources`: the labelled quote and image ids.
 
----
+`out["response_attribution"]` gives the same fields for the whole answer. If you leave out `options`, the question is asked open-ended.
 
-## ⚡ Quick Start (Python API)
-```python
-from omnitrace import OmniTracer
+### Demo on the bundled examples
 
-tracer = OmniTracer(
-    model_name="qwen",      # or "minicpm"
-    method="attmean"        # attribution method, choose from "attmean", "attraw", "attgrads"
-)
-
-# visual-text input
-sample = {
-    "prompt": "Answer the question based on the images provided. Explain your reasoning step by step.",
-    "question": [
-        {"text": "Is the time shown in clock or watch in both <image> and <image> the same?\n(A) Yes, they are both at 9 o'clock\n(B) Yes, they are both at 12 o'clock\n(C) No, they show different time"},
-        {"image": "examples/media/262_0.jpg"},
-        {"image": "examples/media/262_1.jpg"}
-    ],
-}
-
-# audio input
-sample = {
-    "prompt": "Answer the question based on the audio provided. Explain your reasoning step by step.\n",
-    "question": [
-        {"text": "What was the last sound in the sequence?\nA. footsteps\nB. dog_barking\nC. camera_shutter_clicking\nD. tapping_on_glass"},
-        {"audio": "examples/media/b7701ab1-c37e-49f2-8ad9-7177fe0465e9.wav"}
-    ],
-}
-
-# video input
-sample = {
-    "prompt": "Answer the question based on the video provided. Explain your reasoning step by step.\n",
-    "question": [
-        {"text": "What type of weapon does the slain legend retrieve?\nA. Sword\nB. Axe\nC. Gun\nD. Spear"},
-        {"video": "examples/media/6Z_XNM_iT4g.mp4"}
-    ],
-}
-
-result = tracer.trace(sample)
-print(result)
-```
-
-### 🖥️ Command Line Usage
-Run OmniTrace on a dataset file:
-```bash
-# Image-text / Audio
-python scripts/run_demo.py trace \
-  --questions_path examples/question_visual_text.json \
-  --model_name qwen \
-  --method attmean
-
-# Video with Qwen (supports --qwen-video-fps for frame sampling control)
-python scripts/run_demo.py trace \
-  --questions_path examples/question_video.json \
-  --model_name qwen \
-  --method attmean \
-  --qwen-video-fps 2.0 \
-  --video-max-pixels 4200000
-
-# Video with MiniCPM (uses internal 1 FPS sampling, no --qwen-video-fps needed)
-python scripts/run_demo.py trace \
-  --questions_path examples/question_video.json \
-  --model_name minicpm \
-  --method attmean \
-  --video-max-pixels 4200000
-```
-
-#### 📂 Input Format
-The input file should be a JSON list of samples:
-```json
-[
-  {
-    "id": 0,
-    "prompt": "Answer the question based on the images provided. Explain your reasoning step by step.\n",
-    "question": [
-        {"text": "Is the time shown in clock or watch in both <image> and <image> the same?\n(A) Yes, they are both at 9 o'clock\n(B) Yes, they are both at 12 o'clock\n(C) No, they show different time"},
-        {"image": "examples/media/262_0.jpg"},
-        {"image": "examples/media/262_1.jpg"}
-    ],
-  },
-  {
-    "id": 1,
-    "prompt": "Answer the question based on the audio provided. Explain your reasoning step by step.\n",
-    "question": [
-        {"text": "What was the last sound in the sequence?\nA. footsteps\nB. dog_barking\nC. camera_shutter_clicking\nD. tapping_on_glass"},
-        {"audio": "examples/media/b7701ab1-c37e-49f2-8ad9-7177fe0465e9.wav"}
-    ],
-  },
-  {
-    "id": 2,
-    "prompt": "Answer the question based on the video provided. Explain your reasoning step by step.\n",
-    "question": [
-        {"text": "What type of weapon does the slain legend retrieve?\nA. Sword\nB. Axe\nC. Gun\nD. Spear"},
-        {"video": "examples/media/6Z_XNM_iT4g.mp4"}
-    ],
-  },
-]
-```
-
-## 🧩 Supported Modalities
-
-OmniTrace supports multimodal inputs with the following structure:
-
-### 🔹 Text + Image (Interleaved)
-You can provide **multiple text and image inputs**, interleaved:
-
-| Field    | Description                  |
-|----------|------------------------------|
-| `text`   | Input text (string or list)  |
-| `image`  | Path(s) to image(s)          |
-
-Example:
-```json
-{
-    "prompt": "Summarize the conversation.\n",
-    "question": [
-        {"text": "<TURN> \"I have most enjoyed painting poor, delicate children. I didn't know whether that will interest anyone.\" - Helene Schjerfbeck (1862-1946). The Convalescent (1888) is her most famous example of this. It shows the girl getting her energy back."},
-        {"image": "examples/media/-288980723939800020.jpg"},
-        {"text": "<TURN> Thank you for sharing this. 'The Wounded Angel' is my favourite painting in AteneumMuseum"},
-        {"image": "examples/media/8846049217870534914.jpg"},
-        {"image": "examples/media/-4402135406098345009.jpg"},
-        {"text": "<TURN> That's a very nice indeed!"}
-    ],
-}
-```
-
----
-
-### 🔹 Audio/Video
-
-| Field    | Description                  |
-|----------|------------------------------|
-| `audio`  | Path to a single audio/video file  |
-| `question` / `text` | Prompt related to the audio/video |
-
-Example:
-```json
-{
-    "question": [
-        {"text": "What was the last sound in the sequence?\nA. footsteps\nB. dog_barking\nC. camera_shutter_clicking\nD. tapping_on_glass"},
-        {"audio": "examples/media/b7701ab1-c37e-49f2-8ad9-7177fe0465e9.wav"}
-    ],
-}
-{
-    "question": [
-        {"text": "What type of weapon does the slain legend retrieve?\nA. Sword\nB. Axe\nC. Gun\nD. Spear"},
-        {"video": "examples/media/6Z_XNM_iT4g.mp4"}
-    ],
-}
-```
-
-### ⚠️ Notes
-
-- **Text + Image** supports multiple inputs and interleaving.
-- **Audio and Video** currently support **only one file per sample**.
-- Each sample should include a prompt (`text` or `question`) describing the task.
-
----
-
-## ⚙️ Arguments
-
-### `--questions_path`
-Path to input JSON file.
-
-### `--model_name`
-Supported:
-- `qwen`
-- `minicpm`
-
-### `--method`
-Attribution method:
-- `attmean`
-- `attraw`
-- `attgrads`
-
-### `--qwen-video-fps`
-Frame sampling rate in fps for video inputs (default: `2.0`).
-**Only affects the Qwen backend.** MiniCPM uses its own internal 1 FPS sampling and ignores this parameter.
-Lower values sample fewer frames, reducing computation and memory at the cost of temporal resolution.
-
-### `--video-max-pixels`
-Total pixel budget for all sampled video frames (default: `4200000`).
-Lower values reduce vision token count and GPU memory usage. Applies to both `qwen` and `minicpm` backends.
-
----
-
-## 📁 Example Files
-
-We provide ready-to-run examples:
+`examples/questions.json` holds one video (NExT-GQA), one audio (MMAU), and one document (MMDocRAG) question, with their media. These are the examples shown on the project page.
 
 ```bash
-examples/question_visual_text.json
-examples/question_audio.json
-examples/question_video.json
+python scripts/demo.py                                   # all three, Qwen2.5-Omni-7B
+python scripts/demo.py --only audio --model qwen3-omni-30b-a3b
+python scripts/demo.py --questions my_questions.json --data_root /path/to/media --out out.json
 ```
 
----
+### Input format
 
-## 🧪 Minimal Test
+Each input is one JSON object. Relative `path`s resolve against `data_root`, or against `$OMNITRACE_DATA` in the batch scripts.
 
-Run this to verify everything works:
+```jsonc
+// video or audio, multiple choice (one media source per question)
+{"id": "q1", "question": "What sport is the first speaker getting a scholarship for?",
+ "options": ["Basketball", "Soccer", "Baseball", "Softball"], "answer_idx": 3,
+ "sources": [{"sid": "a0", "modality": "audio", "path": "media/clip.wav"}]}
+
+// documents: text passages and images as quotes, long answer
+{"id": "q2", "task": "long_qa", "question": "What is the gender distribution among senior leadership ...?",
+ "sources": [{"sid": "text1", "modality": "text", "text": "..."},
+             {"sid": "image1", "modality": "image", "path": "media/page_chart.jpg"}]}
+```
+
+Optional fields used by evaluation:
+- `evidence`: human evidence, as `[{"sid", "spans": [[start_s, end_s], ...] | null}]`.
+- `answer`: the reference answer.
+- `duration` on a source.
+
+## Reproducing the paper
+
+**Data.** `data/` holds the three evaluation sets (949 questions) in the input format:
+- `question_video.json`: NExT-GQA, 300 questions.
+- `question_audio.json`: MMAU, 249 questions.
+- `question_image_text.json`: MMDocRAG, 400 questions.
+
+Media are not redistributed. [`data/README.md`](data/README.md) says where to download them and where to put each file.
+
+**Generation + attribution.** One shard per GPU. The scripts resume where they stopped, and records go to `runs/<dataset>/<model>/`.
 
 ```bash
-python scripts/run_demo.py trace \
-  --questions_path examples/question_visual_text.json \
-  --model_name qwen \
-  --method attmean
+export OMNITRACE_DATA=$PWD/data NGPU=4
+bash scripts/run_nextgqa.sh smoke          # 5 questions: check the setup first
+bash scripts/run_nextgqa.sh full           # video
+bash scripts/run_mmau.sh full              # audio
+bash scripts/run_mmdocrag.sh full          # documents
+MODEL=minicpm-o-4.5 bash scripts/run_mmau.sh full        # other models: same commands, in their environment
 ```
 
----
+**Causal test.** Each script hides OmniTrace's top units and size-matched random units, replays the saved response with teacher forcing, and prints the summary: lift, keep gain, sentence lift and specificity, and label rows, all with 95% bootstrap intervals.
 
-## 📊 Attribution Performance
-
-**Attribution performance across omni-modal models and tasks.**  
-OT<sub>AttMean</sub>, OT<sub>RawAtt</sub>, and OT<sub>AttGrads</sub> denote OmniTrace instantiated with mean-pooled attention, raw attention, and gradient-based scoring signals, respectively.  
-$\dagger$ indicates results not reported due to computational constraints.  
-$\times$ indicates the method is not applicable.
-
----
-
-### Qwen2.5-Omni-7B
-
-| Method | Text F1 (Summ.) | Image F1 (Summ.) | Image F1 (QA) | Time F1 (Audio Summ.) | Time F1 (Audio QA) | Time F1 (Video QA) |
-|--------|----------------|------------------|---------------|----------------------|--------------------|--------------------|
-| **OT<sub>AttMean</sub>** | **75.66** | **76.59** | 56.60 | **83.12** | **49.90** | **40.16** |
-| OT<sub>RawAtt</sub> | 72.51 | 51.82 | **65.44** | 76.69 | 47.64 | 36.53 |
-| OT<sub>AttGrads</sub> | 67.70 | 42.24 | 65.02 | † | 47.56 | † |
-| Self-Attribution | 9.25 | 40.60 | 61.03 | 4.43 | 29.01 | 13.67 |
-| Embed<sub>processor</sub> | 17.30 | 14.55 | 36.88 | × | × | × |
-| Embed<sub>CLIP</sub> | 17.20 | 3.54 | 6.32 | × | × | × |
-| Random | 10.98 | 8.38 | 24.70 | × | × | × |
-
----
-
-### MiniCPM-o 4.5-9B
-
-| Method | Text F1 (Summ.) | Image F1 (Summ.) | Image F1 (QA) | Time F1 (Audio Summ.) | Time F1 (Audio QA) | Time F1 (Video QA) |
-|--------|----------------|------------------|---------------|----------------------|--------------------|--------------------|
-| OT<sub>AttMean</sub> | 30.57 | 75.43 | 37.00 | 33.52 | **46.94** | **22.85** |
-| **OT<sub>RawAtt</sub>** | **37.32** | **76.46** | **45.41** | **49.21** | 41.06 | 21.59 |
-| Self-Attribution | 9.06 | 66.53 | 39.39 | 0.08 | 34.66 | 18.26 |
-| Embed<sub>processor</sub> | 18.02 | 7.14 | 5.98 | × | × | × |
-| Embed<sub>CLIP</sub> | 17.98 | 5.55 | 5.32 | × | × | × |
-| Random | 12.05 | 10.03 | 22.96 | × | × | × |
-
----
-
-## 💡 Tips
-
-- Always run from the repo root
-- Use relative paths for media files
-- `attgrads` may require high-memory GPUs (e.g., H100/H200)
-
----
-
-## 🔧 Extending OmniTrace
-
-You can easily customize OmniTrace to support new models or attribution methods.
-
-### ➕ Add a New Model
-
-1. Add your model backend implementation under:
-
-```
-src/omnitrace/backends/
+```bash
+bash scripts/run_nextgqa.sh causal         # video: 10/20/30/50% of the duration, black frames
+bash scripts/run_mmau.sh causal            # audio: silence
+bash scripts/run_mmdocrag.sh causal        # documents: 1/2/3 of 15 quotes, black image / blank tokens
+SETTINGS="mass v1" bash scripts/run_mmau.sh causal       # also test argmax tracing + curation
 ```
 
-2. Register any model-specific tokens (e.g., special tokens, modality tokens) in:
+**Agreement with human evidence** (CPU, from the saved records and traces):
 
-```
-src/omnitrace/constants.py
-```
-
-3. Follow existing backends (e.g., `qwen.py`, `minicpm.py`) as reference for:
-   - input formatting
-   - multimodal handling
-   - generation interface
-
----
-
-### ➕ Add a New Attribution Method
-
-1. Implement your attribution scoring function in:
-
-```
-src/omnitrace/core/generation.py
+```bash
+python scripts/eval_temporal.py --run runs/nextgqa/qwen2.5-omni-7b --questions data/question_video.json
+python scripts/eval_doc.py      --run runs/mmdocrag/qwen2.5-omni-7b --questions data/question_image_text.json
+python scripts/label_stats.py   --run runs/mmdocrag/qwen2.5-omni-7b --questions data/question_image_text.json
 ```
 
-2. Ensure your method produces a **token-level attribution tensor** with the same shape as existing methods.
+**Output.** Each line of `records*.jsonl` holds:
+- the response and the parsed answer;
+- the source units (`units`, with times);
+- per sentence and for the whole response, the attention mass on every unit and the labels (`attribution.attention`).
 
-3. Follow existing implementations (`attmean`, `attraw`, `attgrads`) to:
-   - integrate with decoding
-   - construct token-to-source mappings
-   - maintain compatibility with downstream aggregation
+`traces/<id>.npz` stores the per-token, per-layer attention mass on each unit and the generated ids. Any layer setting can be recomputed from it on CPU, and the causal test replays it without generating again.
 
----
+## Test your own attribution method
 
-### ⚠️ Notes
+The causal test works with any method that ranks the same units. For each question, write one line to `runs/<dataset>/<model>/baselines/<name>.jsonl`:
 
-- Keep output tensor shapes consistent to ensure compatibility with the OmniTrace pipeline.
-- Reuse existing utilities for token alignment and span aggregation when possible.
-- Test new methods on small examples before scaling to full datasets.
+```json
+{"id": "<question id>", "method": "<name>", "kind": "scores",
+ "response": [/* one score per unit uid */], "sentences": [[/* ... */], ...], "cost": {"forward": 0}}
+```
 
----
+Then score it next to OmniTrace with the same hiding operation and the same random draws:
 
-## 📌 Citation
-If you use this work, please cite:
+```bash
+python scripts/causal_audio.py run --run runs/mmau/qwen2.5-omni-7b --questions data/question_audio.json \
+    --settings mass ext:<name> --tag mine
+python scripts/causal_audio.py summarize --run runs/mmau/qwen2.5-omni-7b --tag mine
+```
+
+A method that returns a set of units with no ranking, such as cited spans, uses `"kind": "set"` with `--ext_sets <name>`. It is compared with random units and with OmniTrace's top units of the same count. The interface is documented in `omnitrace/external.py`.
+
+## Repository layout
+
+```
+omnitrace/                 the library
+  api.py                   OmniTrace(model).trace(sample)
+  evidence.py              attention mass per unit, labels (select_units), settings on saved traces
+  capture.py               attention capture during generation (last query row, SDPA)
+  timeline.py, segment.py  input positions -> source units; response -> sentences
+  ablation.py              content-free placeholders for the causal test
+  external.py              plug-in interface for other attribution methods
+  backends/                Qwen2.5-Omni, MiniCPM-o 4.5, Qwen3-Omni-30B-A3B
+scripts/
+  run_attribution.py       batch generation + attribution (records, traces)
+  causal_{video,audio,doc}.py   causal test (GPU) and summaries (CPU)
+  eval_temporal.py, eval_doc.py, label_stats.py, tau.py   agreement with human evidence, label threshold
+  run_{nextgqa,mmau,mmdocrag}.sh   launchers (smoke / full / causal)
+  demo.py                  the bundled examples
+configs/label_tau.json     label threshold per modality (1.5 for all)
+data/                      evaluation question files (media: see data/README.md)
+examples/                  three example questions with media
+```
+
+## Citation
 
 ```bibtex
-@misc{yan2026omnitraceunifiedframeworkgenerationtime,
-      title={OmniTrace: A Unified Framework for Generation-Time Attribution in Omni-Modal LLMs}, 
-      author={Qianqi Yan and Yichen Guo and Ching-Chen Kuo and Shan Jiang and Hang Yin and Yang Zhao and Xin Eric Wang},
-      year={2026},
-      eprint={2604.13073},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2604.13073}, 
+@misc{yan2026omnitrace,
+  title         = {OmniTrace: A Unified Framework for Generation-Time Source Attribution in Omni-Modal LLMs},
+  author        = {Qianqi Yan and Yichen Guo and Ching-Chen Kuo and Shan Jiang and Hang Yin and Yang Zhao and Xin Eric Wang},
+  year          = {2026},
+  eprint        = {2604.13073},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2604.13073}
 }
+```
+
+## License
+
+MIT (see `LICENSE`). The example media come from NExT-GQA (VidOR), MMAU, and MMDocRAG and keep the licenses of those datasets.

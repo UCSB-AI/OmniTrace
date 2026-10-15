@@ -1,0 +1,129 @@
+{
+  "image_text": {
+    "tau": 1.5,
+    "date": "2026-10-11",
+    "model": "qwen2.5-omni-7b",
+    "criterion": "mean per-question F1 of the response-level label against gold quotes (scripts/label_stats.py)",
+    "dev": "OT_data/question_image_text_dev.json (200 questions, separate file; the main 400 are untouched)",
+    "table": {
+      "1.25": {
+        "f1": 0.492
+      },
+      "1.5": {
+        "f1": 0.502
+      },
+      "1.75": {
+        "f1": 0.494
+      },
+      "2": {
+        "f1": 0.467
+      },
+      "2.5": {
+        "f1": 0.424
+      },
+      "3": {
+        "f1": 0.384
+      }
+    }
+  },
+  "video": {
+    "tau": 1.5,
+    "date": "2026-10-11",
+    "why": "default kept: 1.25 scores highest but not reliably higher (95% interval [-0.0050, 0.0089])",
+    "criterion": "causal, response level: deletion lift + keep gain of the label vs size-matched random (mean log-prob of the response; empty label = 0)",
+    "run": "runs/nextgqa/qwen2.5-omni-7b",
+    "tag": "tau_blank",
+    "n_dev": 54,
+    "best_raw": 1.25,
+    "table": {
+      "1.25": {
+        "score": 0.0181698308866701,
+        "del_lift": 0.008386198109314765,
+        "keep_gain": 0.009783632777355335,
+        "labelled": 1.0
+      },
+      "1.5": {
+        "score": 0.0165130728740751,
+        "del_lift": 0.005941427968166492,
+        "keep_gain": 0.010571644905908607,
+        "labelled": 0.9629629629629629
+      },
+      "1.75": {
+        "score": 0.009086423312072399,
+        "del_lift": 0.002949574157411669,
+        "keep_gain": 0.006136849154660733,
+        "labelled": 0.9259259259259259
+      },
+      "2": {
+        "score": 0.011818392225253728,
+        "del_lift": 0.0017429935159506624,
+        "keep_gain": 0.010075398709303065,
+        "labelled": 0.8703703703703703
+      },
+      "2.5": {
+        "score": 0.014864180007098635,
+        "del_lift": 0.0008131291395352207,
+        "keep_gain": 0.01405105086756341,
+        "labelled": 0.6851851851851852
+      },
+      "3": {
+        "score": 0.013384144707226462,
+        "del_lift": 0.001234523492094911,
+        "keep_gain": 0.012149621215131547,
+        "labelled": 0.5185185185185185
+      }
+    },
+    "dev_frac": 0.2,
+    "dev_seed": 0
+  },
+  "audio": {
+    "tau": 1.5,
+    "date": "2026-10-11",
+    "why": "default kept: 1.25 scores highest but not reliably higher (95% interval [-0.0021, 0.0468])",
+    "criterion": "causal, response level: deletion lift + keep gain of the label vs size-matched random (mean log-prob of the response; empty label = 0)",
+    "run": "runs/mmau/qwen2.5-omni-7b",
+    "tag": "tau_blank",
+    "n_dev": 53,
+    "best_raw": 1.25,
+    "table": {
+      "1.25": {
+        "score": 0.08305414639553933,
+        "del_lift": 0.039044368473238916,
+        "keep_gain": 0.04400977792230044,
+        "labelled": 0.9811320754716981
+      },
+      "1.5": {
+        "score": 0.0656454768851868,
+        "del_lift": 0.03195997365053345,
+        "keep_gain": 0.03368550323465336,
+        "labelled": 0.9056603773584906
+      },
+      "1.75": {
+        "score": 0.06688362364686509,
+        "del_lift": 0.03340498845344819,
+        "keep_gain": 0.033478635193416914,
+        "labelled": 0.7169811320754716
+      },
+      "2": {
+        "score": 0.055045537088277204,
+        "del_lift": 0.027888455434040456,
+        "keep_gain": 0.027157081654236748,
+        "labelled": 0.6037735849056604
+      },
+      "2.5": {
+        "score": 0.0509845181456152,
+        "del_lift": 0.027920704967570754,
+        "keep_gain": 0.023063813178044446,
+        "labelled": 0.3584905660377358
+      },
+      "3": {
+        "score": 0.03407153618410698,
+        "del_lift": 0.01984018087387085,
+        "keep_gain": 0.014231355310236135,
+        "labelled": 0.2830188679245283
+      }
+    },
+    "dev_frac": 0.2,
+    "dev_seed": 0
+  }
+}

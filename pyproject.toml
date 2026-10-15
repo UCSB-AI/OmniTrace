@@ -4,29 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "omnitrace"
-version = "0.1.1"
-description = "OmniTrace: multimodal attribution for generative models"
+version = "0.2.0"
+description = "OmniTrace: single-pass, training-free source attribution for omni-modal LLMs (text, image, audio, video)"
 readme = "README.md"
-requires-python = ">=3.9"
-authors = [{ name = "Your Name" }]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Qianqi Yan" }, { name = "Yichen Guo" }, { name = "Ching-Chen Kuo" }, { name = "Shan Jiang" },
+           { name = "Hang Yin" }, { name = "Yang Zhao" }, { name = "Xin Eric Wang" }]
+# model-specific pins (transformers, qwen-omni-utils, minicpmo-utils) are in requirements*.txt
+dependencies = ["torch", "transformers", "accelerate", "numpy", "tqdm", "spacy>=3.7"]
 
-dependencies = [
-  "torch",
-  "transformers",
-  "numpy",
-  "tqdm",
-  "Pillow",
-  "opencv-python",
-  "soundfile",     
-  "librosa",       
-  "spacy"
-]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
+[project.urls]
+Homepage = "https://jackie-2000.github.io/omnitrace.github.io/"
+Paper = "https://arxiv.org/abs/2604.13073"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[project.scripts]
-omnitrace = "omnitrace.cli:main"
+include = ["omnitrace*"]

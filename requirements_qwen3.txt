@@ -1,0 +1,15 @@
+# Qwen3-Omni-30B-A3B backend (omnitrace/backends/qwen3_omni.py): a SEPARATE env from requirements.txt, so the Qwen2.5 env
+# (and runs still using it) keeps its transformers version. Qwen3-Omni needs transformers >= 4.57 (model card: 4.57.0.dev0);
+# the backend is tested on 4.57.1 and 5.19 (CPU, tiny random model). Python >= 3.10.
+#   conda create -n omnitrace-qwen3 python=3.11 && conda activate omnitrace-qwen3
+#   pip install -r requirements_qwen3.txt && python -m spacy download en_core_web_sm
+# Blackwell GPUs (B200, sm_100): use a torch wheel built for CUDA 12.8 (--index-url https://download.pytorch.org/whl/cu128)
+torch>=2.7
+torchvision                     # the Qwen3-Omni processor loads AutoVideoProcessor, which needs it; install from the same index as torch
+transformers==4.57.1
+accelerate
+qwen-omni-utils[decord]>=0.0.9  # needs image_patch_size (16-px patches); video/audio loading
+numpy
+tqdm
+spacy>=3.7                      # + python -m spacy download en_core_web_sm
+librosa

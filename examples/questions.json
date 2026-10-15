@@ -1,0 +1,248 @@
+[
+ {
+  "id": "nextgqa/test/3487251005_10",
+  "dataset": "NExT-GQA",
+  "modality": "video",
+  "split": "test",
+  "native_id": {
+   "video_id": "3487251005",
+   "qid": "10"
+  },
+  "task": "mcqa",
+  "sources": [
+   {
+    "sid": "v0",
+    "modality": "video",
+    "path": "media/3487251005.mp4",
+    "duration": 20.387,
+    "has_audio": true
+   }
+  ],
+  "question": "why did the boys walked backwards after talking to the lady",
+  "options": [
+   "walk to the tent",
+   "show his garden",
+   "to come in the camera",
+   "convince girl to do something",
+   "give spotlight to boy in yellow"
+  ],
+  "answer": "to come in the camera",
+  "answer_idx": 2,
+  "evidence": [
+   {
+    "sid": "v0",
+    "spans": [
+     [
+      15.9,
+      20
+     ]
+    ]
+   }
+  ],
+  "evidence_source": "human"
+ },
+ {
+  "id": "mmau/test-mini/427e55eb-4ab4-4bb0-8c8f-574f10097087",
+  "dataset": "MMAU",
+  "modality": "audio",
+  "split": "test-mini",
+  "native_id": {
+   "id": "427e55eb-4ab4-4bb0-8c8f-574f10097087"
+  },
+  "task": "mcqa",
+  "sources": [
+   {
+    "sid": "a0",
+    "modality": "audio",
+    "path": "media/427e55eb-4ab4-4bb0-8c8f-574f10097087.wav",
+    "duration": 21.12
+   }
+  ],
+  "question": "What sport is First speaker getting a scholarship for?",
+  "options": [
+   "Basketball",
+   "Soccer",
+   "Baseball",
+   "Softball"
+  ],
+  "answer": "Softball",
+  "answer_idx": 3,
+  "evidence": null,
+  "evidence_source": null
+ },
+ {
+  "id": "mmdocrag/evaluation/661",
+  "dataset": "MMDocRAG",
+  "modality": "image_text",
+  "split": "evaluation",
+  "native_id": {
+   "q_id": 661,
+   "old_id": 2042
+  },
+  "task": "long_qa",
+  "sources": [
+   {
+    "sid": "text1",
+    "modality": "text",
+    "role": "document",
+    "text": "In 2020, our median aggregate UK-wide  gender pay gap, including all reported HSBC  entities, was  $48\\%$  , and our median bonus gap  was  $57.9\\%$  . Our overall UK gender pay gap   is driven by the shape of our UK workforce.  There are more men than women in senior and  high-paid roles, and more women than men in  junior roles, many of which are part-time.  ",
+    "page": 65,
+    "layout_id": 1265
+   },
+   {
+    "sid": "text2",
+    "modality": "text",
+    "role": "document",
+    "text": "– Employees responded to our Snapshot surveys at a record rate, and our  employee advocacy rose five points to  $71\\%$  . – We met our target of   $30\\%$   women in senior leadership roles, and published ethnicity  data in the UK and US. We recognise we need to take action, and aim to at least  double the number of Black employees in senior leadership roles by 2025. ",
+    "page": 44,
+    "layout_id": 827
+   },
+   {
+    "sid": "text3",
+    "modality": "text",
+    "role": "document",
+    "text": "We believe diversity makes us stronger, and  we are dedicated to building a diverse and  connected workforce. We achieved our target  of   $30\\%$   women holding senior leadership  roles, which are classified as 0 to 3 in our  global career band structure, by 2020. We  want to keep our focus and momentum and  build more gender-balanced teams, so we  have set ourselves a target to achieve   $35\\%$    women in senior leadership roles by 2025.  ",
+    "page": 17,
+    "layout_id": 366
+   },
+   {
+    "sid": "text4",
+    "modality": "text",
+    "role": "document",
+    "text": "We published ethnicity data in the UK and   US and recognise we need to take action. We  aim to at least double the number of Black  employees in senior leadership roles globally  by 2025. ",
+    "page": 17,
+    "layout_id": 368
+   },
+   {
+    "sid": "text5",
+    "modality": "text",
+    "role": "document",
+    "text": "There is much still to do, but we are moving in  the right direction. More than  $30\\%$   of our  senior leaders are female, in line with the goal  we set to achieve by the end of 2020. I want  that number to increase to at least   $35\\%$   by  2025, and we have a number of initiatives in  place to help achieve it. In May, we launched a  new global ethnicity inclusion programme to  better enable careers and career progression  for colleagues from ethnic minorities, and in  July, we made a series of commitments to  address feedback from Black colleagues in  particular. These included a commitment to  more than double our number of Black senior  leaders by 2025. ",
+    "page": 12,
+    "layout_id": 235
+   },
+   {
+    "sid": "text6",
+    "modality": "text",
+    "role": "document",
+    "text": "In 2018, we committed to reach  $30\\%$   women  in senior leadership roles by 2020, which are  classified as 0 to 3 in our global career band  structure. We achieved  $30.3\\%$  . Appointments  of external female candidates into senior  leadership reduced from   $33.0\\%$   in 2019 to   $31.6\\%$   in 2020. We will continue efforts to build  more gender-balanced leadership teams and  have set ourselves a target to achieve  $35\\%$    women in senior leadership roles by 2025. ",
+    "page": 65,
+    "layout_id": 1261
+   },
+   {
+    "sid": "text7",
+    "modality": "text",
+    "role": "document",
+    "text": " $\\mathsf{I n\\,2018},$  , we committed to reach  $30\\%$   women  in senior leadership roles, which are classified  as 0 to 3 in our global career band structure,  by 2020. At the end of 2020, we achieved   $30.3\\%$   and have now set ourselves a target to  achieve  $35\\%$   by 2025. In July 2020, we set out  global race commitments, which included a  goal to at least double the number of Black  ",
+    "page": 22,
+    "layout_id": 440
+   },
+   {
+    "sid": "text8",
+    "modality": "text",
+    "role": "document",
+    "text": "1 \u0007 Combined executive committee and direct reports  includes HSBC executive Directors, Group  Managing Directors, Group Company Secretary  and Chief Governance Officer and their direct  reports (excluding administrative staff).  2 \u0007 Senior leadership refers to employees performing  roles classified as 0, 1, 2 and 3 in our global career  band structure. ",
+    "page": 65,
+    "layout_id": 1272
+   },
+   {
+    "sid": "text9",
+    "modality": "text",
+    "role": "document",
+    "text": "For the first time we also published our UK  ethnicity pay gap. Our median aggregate  UK-wide ethnicity pay gap across all reported  HSBC entities was   $.5.6\\%$  . Our median bonus  gap was   $0.8\\%$  . However, the pay gaps differ  depending on the underlying ethnic minority  group. The businesses and roles which  employees from different ethnic groups work  in impact the gaps, with relatively lower  representation of ethnic minority employees in  senior, higher paid roles. While  $79\\%$   of our UK  employees have declared their ethnicity, fewer  senior, higher paid employees have done so   to date and were therefore not included in our  ethnicity pay gap analysis. ",
+    "page": 65,
+    "layout_id": 1266
+   },
+   {
+    "sid": "text10",
+    "modality": "text",
+    "role": "document",
+    "text": "We aim to increase diverse representation,  particularly in the senior levels of our  organisation. In 2020, we achieved more than   $30\\%$   of female senior leadership, and we  intend to increase to more than  $35\\%$   by 2025.  We endeavour to close the gaps in employee  engagement in under-represented groups. We  are also focusing on the quality and reporting  of ethnicity data and benchmarking our  actions. Our progress to date includes race  commitments to at least double the number of  Black employees in senior leadership roles  globally by 2025 and recognition within  Stonewall’s 2020 Top Global Employers Index  for  $\\mathsf{L G B T+}$   staff.  ",
+    "page": 16,
+    "layout_id": 334
+   },
+   {
+    "sid": "image1",
+    "modality": "image",
+    "role": "document",
+    "path": "media/NYSE_HSBC_2020_image129.jpg",
+    "page": 65,
+    "layout_id": 1270,
+    "width": 492,
+    "height": 852,
+    "description": "The table shows a breakdown of different groups or committees within an organization, with each section detailing two sets of numbers. One set is in purple, and the other in gray, each accompanied by a percentage. The groups listed include the Holdings Board, Group Executive Committee, Combined Executive Committee and Direct Reports, Senior Leadership, and others like WPB, CMB, GBM, and Digital Business Services. The final row covers \"All employees.\"\n\nFor example:\n\n- Holdings Board: 9 (64%) in purple, 5 (36%) in gray.\n- Group Executive Committee: 13 (81%) in purple, 3 (19%) in gray.\n- All employees: 111,422 (48%) in purple, 119,618 (52%) in gray.\n\nThe purple numbers and percentages are consistently higher than the gray ones except for the \"All employees\" category, where the purple percentage is lower."
+   },
+   {
+    "sid": "image2",
+    "modality": "image",
+    "role": "document",
+    "path": "media/NYSE_HSBC_2020_image130.jpg",
+    "page": 65,
+    "layout_id": 1273,
+    "width": 1092,
+    "height": 366,
+    "description": "The image consists of two donut charts displaying the gender distribution of all employees and senior leaders in a company, along with a comparison to figures from 2019.\n\n1. **All Employees Chart**: \n   - The chart shows that the overall workforce is made up of 48% males (purple) and 52% females (gray).\n   - These percentages remained the same when compared to 2019.\n\n2. **Senior Leaders Chart**: \n   - This chart illustrates that senior leadership is composed of 70% males (purple) and 30% females (gray).\n   - There has been a slight change from 2019, where males made up 71% and females made up 29% of senior leadership.\n\nThe caption \"Percentage of our senior leadership who are women\" refers to the data shown in the Senior Leaders chart, highlighting that 30% of senior leaders are female."
+   },
+   {
+    "sid": "image3",
+    "modality": "image",
+    "role": "document",
+    "path": "media/NYSE_HSBC_2020_image131.jpg",
+    "page": 66,
+    "layout_id": 1283,
+    "width": 108,
+    "height": 105,
+    "description": "The image consists of a purple circle and three arrows. One arrow points upwards from above the circle, another arrow points diagonally upwards to the right, and the third arrow points horizontally to the right. There is no caption text provided to indicate further context."
+   },
+   {
+    "sid": "image4",
+    "modality": "image",
+    "role": "document",
+    "path": "media/NYSE_HSBC_2020_image133.jpg",
+    "page": 66,
+    "layout_id": 1300,
+    "width": 498,
+    "height": 594,
+    "description": "The image shows a group of people seated in a circular arrangement on orange chairs, participating in a meeting or discussion. The setting appears to be indoors, with people engaging in conversation or listening attentively. The image is taken from an overhead perspective."
+   },
+   {
+    "sid": "image5",
+    "modality": "image",
+    "role": "document",
+    "path": "media/NYSE_HSBC_2020_image132.jpg",
+    "page": 66,
+    "layout_id": 1284,
+    "width": 147,
+    "height": 96,
+    "description": "The image shows a simple line graph with connecting circles at each data point, displaying an upward trend."
+   }
+  ],
+  "question": "What is the gender distribution among senior leadership and how does it compare to the overall employee gender distribution?",
+  "options": null,
+  "answer": "Senior leadership is 70% male and 30% female, while the overall workforce is 48% male and 52% female.",
+  "answer_idx": null,
+  "evidence": [
+   {
+    "sid": "text3",
+    "spans": null
+   },
+   {
+    "sid": "image1",
+    "spans": null
+   },
+   {
+    "sid": "image2",
+    "spans": null
+   },
+   {
+    "sid": "text6",
+    "spans": null
+   },
+   {
+    "sid": "text10",
+    "spans": null
+   }
+  ],
+  "evidence_source": "human"
+ }
+]
