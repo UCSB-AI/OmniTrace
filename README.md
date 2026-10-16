@@ -2,7 +2,7 @@
 
 Official code for **"OmniTrace: A Unified Framework for Generation-Time Source Attribution in Omni-Modal LLMs"**.
 
-[📄 Paper](OmniTrace.pdf) | [📜 arXiv](https://arxiv.org/abs/2604.13073) | [🌐 Project page](https://jackie-2000.github.io/omnitrace.github.io/)
+[📜 arXiv](https://arxiv.org/abs/2604.13073) | [🌐 Project page](https://jackie-2000.github.io/omnitrace.github.io/)
 
 <p align="center"><img src="assets/teaser.png" width="92%"></p>
 
